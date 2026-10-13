@@ -1,4 +1,4 @@
-﻿# CloudExpense â€” Cloud-Based Expense Tracker with Receipt OCR
+﻿# CloudExpense | Cloud-Based Expense Tracker with Receipt OCR
 
 CloudExpense is an academic cloud-computing project that helps users record expenses from receipt images, review extracted details, and analyze their spending.
 
@@ -214,27 +214,29 @@ The backend package currently does not define a real automated test suite. The f
 
 ```text
 CloudExpense-main/
-â”œâ”€â”€ backend/
-â”‚   â”œâ”€â”€ src/
-â”‚   â”‚   â”œâ”€â”€ handlers/
-â”‚   â”‚   â”œâ”€â”€ middleware/
-â”‚   â”‚   â”œâ”€â”€ models/
-â”‚   â”‚   â””â”€â”€ utils/
-â”‚   â”œâ”€â”€ server.js
-â”‚   â”œâ”€â”€ Dockerfile
-â”‚   â”œâ”€â”€ docker-compose.yml
-â”‚   â”œâ”€â”€ .env.example
-â”‚   â””â”€â”€ infrastructure-template-DRAFT-DO-NOT-DEPLOY.yaml
-â”œâ”€â”€ frontend/
-â”‚   â””â”€â”€ src/
-â”œâ”€â”€ docs/
-â”‚   â”œâ”€â”€ architecture/
-â”‚   â”œâ”€â”€ aws-console/
-â”‚   â”œâ”€â”€ infrastructure/
-â”‚   â””â”€â”€ ui/
-â”œâ”€â”€ CLOUD_EXPENSE_CHANGES.md
-â””â”€â”€ README.md
+|-- backend/
+|   |-- src/
+|   |   |-- handlers/
+|   |   |-- middleware/
+|   |   |-- models/
+|   |   `-- utils/
+|   |-- server.js
+|   |-- Dockerfile
+|   |-- docker-compose.yml
+|   |-- .env.example
+|   `-- infrastructure-template-DRAFT-DO-NOT-DEPLOY.yaml
+|-- frontend/
+|   `-- src/
+|-- docs/
+|   |-- architecture/
+|   |-- aws-console/
+|   |-- infrastructure/
+|   `-- ui/
+|-- CLOUD_EXPENSE_CHANGES.md
+`-- README.md
 ```
+
+*Note: This directory tree represents the documented project layout. Verify folder and file names against the actual repository before final submission.*
 
 ## 12. Setup and Deployment
 
@@ -314,6 +316,18 @@ Do not deploy the draft CloudFormation template without correcting and validatin
 
 ## 14. Author
 
-**Project:** CloudExpense
-**Submitted by:** Add the project team members' names and IDs here.
-**Course:** Add course/subject and mentor details here.
+**Project Name:** CloudExpense
+
+**Project Description:** Cloud-Based Expense Tracking and Receipt Management System
+
+### Submitted By
+
+1. **Gautam Ujjanwal** — A64
+2. **Sahil Patil** — A43
+3. **Abhay Pratap Singh** — A56
+
+### Under the Guidance of
+
+**Dr. Nidhi Punia**
+
+
