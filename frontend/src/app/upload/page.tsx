@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Upload, Plus } from "lucide-react";
 import UploadBox from "@/components/UploadBox";
 import ExpenseForm from "@/components/ExpenseForm";
@@ -9,6 +9,21 @@ import { useRouter } from "next/navigation";
 export default function UploadPage() {
   const [activeTab, setActiveTab] = useState<"ocr" | "manual">("ocr");
   const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setActiveTab(params.get("mode") === "manual" ? "manual" : "ocr");
+
+    // Support homepage card links that point directly to a section.
+    if (window.location.hash === "#upload-receipt" || window.location.hash === "#ai-extraction") {
+      requestAnimationFrame(() => {
+        document.getElementById(window.location.hash.slice(1))?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    }
+  }, []);
 
   const handleExpenseAdded = () => {
     // Refresh the page to show the new expense
@@ -52,8 +67,8 @@ export default function UploadPage() {
 
       {/* Tab Content */}
       {activeTab === "ocr" && (
-        <div>
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div id="upload-receipt">
+          <div id="ai-extraction" className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-900 text-sm">
               📸 Upload a receipt image and we'll automatically extract the
               merchant, amount, and date using OCR.

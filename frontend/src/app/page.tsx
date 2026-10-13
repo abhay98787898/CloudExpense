@@ -15,7 +15,12 @@ export default function Home() {
       </div>
 
       <div className="grid md:grid-cols-4 gap-6 mb-12">
-        <div className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
+        <Link
+          href="/upload?mode=ocr#upload-receipt"
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+          aria-label="Scan a receipt using OCR"
+        >
+        <div className="bg-white rounded-xl shadow-lg p-6 text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer">
           <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <Upload className="h-8 w-8 text-indigo-600" />
           </div>
@@ -26,8 +31,14 @@ export default function Home() {
             Upload receipt & extract data with OCR
           </p>
         </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
+        <Link
+          href="/upload?mode=manual"
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+          aria-label="Add an expense manually"
+        >
+        <div className="bg-white rounded-xl shadow-lg p-6 text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer">
           <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <PlusCircle className="h-8 w-8 text-purple-600" />
           </div>
@@ -38,8 +49,14 @@ export default function Home() {
             Enter expense details manually in seconds
           </p>
         </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
+        <Link
+          href="/upload?mode=ocr#ai-extraction"
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+          aria-label="Use AI extraction to scan a receipt"
+        >
+        <div className="bg-white rounded-xl shadow-lg p-6 text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer">
           <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <Receipt className="h-8 w-8 text-blue-600" />
           </div>
@@ -50,8 +67,14 @@ export default function Home() {
             AWS Textract extracts merchant, date, & total
           </p>
         </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
+        <Link
+          href="/dashboard"
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+          aria-label="Track and analyze spending"
+        >
+        <div className="bg-white rounded-xl shadow-lg p-6 text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer">
           <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <BarChart3 className="h-8 w-8 text-green-600" />
           </div>
@@ -62,6 +85,7 @@ export default function Home() {
             View spending trends and monthly summaries
           </p>
         </div>
+        </Link>
       </div>
 
       <div className="flex justify-center gap-4">
