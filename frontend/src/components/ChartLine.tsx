@@ -1,6 +1,7 @@
 'use client';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { formatMoney } from '@/lib/helpers';
 
 interface ChartDataItem {
   name: string;
@@ -23,7 +24,7 @@ export default function ChartLine({ data }: ChartLineProps) {
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
         <YAxis />
-        <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+        <Tooltip formatter={(value: number) => formatMoney(Number(value))} />
         <Legend />
         <Line type="monotone" dataKey="amount" stroke="#6366f1" strokeWidth={2} />
       </LineChart>

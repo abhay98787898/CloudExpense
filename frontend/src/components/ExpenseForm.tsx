@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, CheckCircle, XCircle } from "lucide-react";
 import Loader from "./Loader";
+import { API_BASE_URL } from "@/lib/config";
 
 interface FormData {
   amount: string;
@@ -83,7 +84,7 @@ export default function ExpenseForm({
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/expenses`,
+        `${API_BASE_URL}/expenses`,
         {
           method: "POST",
           headers: {

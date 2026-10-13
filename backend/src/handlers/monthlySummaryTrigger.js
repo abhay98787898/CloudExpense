@@ -38,7 +38,7 @@ export const handler = async (event) => {
 
       const total = monthlyExps.reduce((sum, e) => sum + (e.total || 0), 0);
 
-      const message = `Expense Summary for ${lastMonthStr}\n\nUser: ${userId}\nTotal Spent: $${total.toFixed(
+      const message = `Expense Summary for ${lastMonthStr}\n\nUser: ${userId}\nTotal Spent: ₹${total.toFixed(
         2
       )}\nTotal Transactions: ${monthlyExps.length}`;
 

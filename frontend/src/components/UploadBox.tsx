@@ -9,6 +9,7 @@ import {
   getExpenses,
 } from "@/lib/api";
 import Loader from "./Loader";
+import { API_BASE_URL } from "@/lib/config";
 
 interface ExtractedData {
   merchant: string;
@@ -27,6 +28,7 @@ export default function UploadBox() {
   const [editedData, setEditedData] = useState<ExtractedData | null>(null);
   const [error, setError] = useState("");
   const [receiptUrl, setReceiptUrl] = useState("");
+  const [receiptKey, setReceiptKey] = useState("");
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +48,9 @@ export default function UploadBox() {
       setFile(selectedFile);
       setError("");
       setExtractedData(null);
+      setEditedData(null);
+      setReceiptUrl("");
+      setReceiptKey("");
     } else {
       setError("Please select a valid image file");
     }
@@ -97,6 +102,8 @@ export default function UploadBox() {
       await uploadToS3(uploadUrl, file);
 
       // Process the receipt - returns extracted data
+      setUploading(false);
+      setProcessing(true);
       const processResult = await processReceipt(key);
 
       // Set extracted data for review before saving
@@ -110,6 +117,7 @@ export default function UploadBox() {
         setExtractedData(data);
         setEditedData(data);
         setReceiptUrl(processResult.receiptUrl || "");
+        setReceiptKey(processResult.receiptKey || key);
       }
 
       setUploading(false);
@@ -135,7 +143,7 @@ export default function UploadBox() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/save-expense`,
+        `${API_BASE_URL}/save-expense`,
         {
           method: "POST",
           headers: {
@@ -144,6 +152,7 @@ export default function UploadBox() {
           },
           body: JSON.stringify({
             receiptUrl,
+            receiptKey,
             merchant: editedData.merchant,
             total: editedData.total,
             date: editedData.date,
@@ -163,6 +172,7 @@ export default function UploadBox() {
       setEditedData(null);
       setFile(null);
       setReceiptUrl("");
+      setReceiptKey("");
 
       // Show success message
       alert("Expense saved successfully!");

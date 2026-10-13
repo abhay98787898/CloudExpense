@@ -1,6 +1,7 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { formatMoney } from '@/lib/helpers';
 
 interface ChartDataItem {
   name: string;
@@ -36,7 +37,7 @@ export default function ChartPie({ data }: ChartPieProps) {
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+        <Tooltip formatter={(value: number) => formatMoney(Number(value))} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

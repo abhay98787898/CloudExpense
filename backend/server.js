@@ -16,9 +16,47 @@ import { handler as getUploadUrlHandler } from "./src/handlers/getUploadUrl.js";
 import { handler as processReceiptHandler } from "./src/handlers/processReceipt.js";
 import { publishMetric } from "./src/utils/telemetry.js";
 import { sendEmail } from "./src/utils/email.js";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const app = express();
 const PORT = config.port;
+const receiptS3 = new S3Client({ region: config.region });
+
+// Older records may contain only a direct or expired S3 URL. Recover the object key
+// so the API can return a fresh, short-lived URL without making the bucket public.
+function getReceiptKey(expense) {
+  if (typeof expense.receiptKey === "string" && expense.receiptKey.startsWith("receipts/")) {
+    return expense.receiptKey;
+  }
+  if (typeof expense.receiptUrl !== "string" || !expense.receiptUrl.trim()) return null;
+  try {
+    const pathname = new URL(expense.receiptUrl).pathname;
+    const marker = pathname.indexOf("/receipts/");
+    if (marker < 0) return null;
+    return decodeURIComponent(pathname.slice(marker + 1));
+  } catch {
+    return null;
+  }
+}
+
+async function attachFreshReceiptUrls(expenses) {
+  return Promise.all((expenses || []).map(async (expense) => {
+    const key = getReceiptKey(expense);
+    if (!key) return { ...expense, receiptUrl: "" };
+    try {
+      const receiptUrl = await getSignedUrl(
+        receiptS3,
+        new GetObjectCommand({ Bucket: config.uploadBucket, Key: key }),
+        { expiresIn: 3600 }
+      );
+      return { ...expense, receiptKey: key, receiptUrl };
+    } catch (error) {
+      console.warn("Could not sign receipt URL:", key, error.message);
+      return { ...expense, receiptKey: key, receiptUrl: "" };
+    }
+  }));
+}
 
 // Middleware
 app.use(
@@ -119,10 +157,11 @@ app.get("/expenses", authenticateToken, async (req, res) => {
     const userId = req.user.id;
     const { getExpensesByUser } = await import("./src/utils/dynamo.js");
     const expenses = await getExpensesByUser(userId);
+    const expensesWithReceiptUrls = await attachFreshReceiptUrls(expenses);
     console.log(
       `Retrieved ${expenses ? expenses.length : 0} expenses for user ${userId}`
     );
-    res.status(200).json({ expenses: expenses || [] });
+    res.status(200).json({ expenses: expensesWithReceiptUrls });
   } catch (error) {
     console.error("Get expenses error:", error);
     res
@@ -188,6 +227,7 @@ app.post("/save-expense", authenticateToken, async (req, res) => {
     const userId = req.user.id;
     const {
       receiptUrl,
+      receiptKey,
       merchant,
       total,
       date,
@@ -214,7 +254,10 @@ app.post("/save-expense", authenticateToken, async (req, res) => {
       rawText: rawText || "",
     };
 
-    const expenseItem = createExpenseItem(userId, extractedData, receiptUrl);
+    const safeReceiptKey = typeof receiptKey === "string" && receiptKey.startsWith("receipts/")
+      ? receiptKey
+      : undefined;
+    const expenseItem = createExpenseItem(userId, extractedData, receiptUrl, safeReceiptKey);
     await saveExpense(expenseItem);
     await publishMetric("ExpenseSaved", 1);
     await checkBudgetAndNotify(req.user.id, req.user.email, expenseItem.category);

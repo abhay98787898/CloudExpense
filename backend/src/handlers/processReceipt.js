@@ -51,6 +51,7 @@ export const handler = async (event) => {
       message: "Receipt scanned successfully",
       extracted: extractedData,
       receiptUrl,
+      receiptKey: key,
       note: "Review the extracted data above. Use the Save Expense endpoint to save your changes.",
     });
   } catch (error) {
