@@ -1,5 +1,5 @@
 
-import { analyzeReceipt } from "../utils/textract.js";
+import { analyzeReceipt } from "../utils/ocr.js";
 import { parseExpenseData } from "../utils/parser.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import config from "../config.js";

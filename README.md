@@ -1,357 +1,319 @@
-# AI-Powered Expense Tracker with OCR
+﻿# CloudExpense â€” Cloud-Based Expense Tracker with Receipt OCR
 
-Cloud-native expense management application built on AWS using managed AI services, Infrastructure as Code, and containerized deployment.
+CloudExpense is an academic cloud-computing project that helps users record expenses from receipt images, review extracted details, and analyze their spending.
 
----
-
-## Badges
-
-![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
-![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
-![Node.js](https://img.shields.io/badge/Node.js-v22-green)
-![Next.js](https://img.shields.io/badge/Next.js-16-black)
-![License](https://img.shields.io/badge/Status-Production--Ready-brightgreen)
-
----
+> **Project status:** Academic MVP. This repository contains the application source and supporting AWS configuration. Do not describe it as production-ready. Some deployment/IaC files are legacy drafts and must be reviewed before use.
 
 ## Table of Contents
 
-* [Overview](#overview)
-* [Problem Statement](#problem-statement)
-* [Architecture](#architecture)
-* [Tech Stack](#tech-stack)
-* [Core Workflows](#core-workflows)
-* [Infrastructure as Code](#infrastructure-as-code)
-* [Containerization & Deployment](#containerization--deployment)
-* [Security](#security)
-* [Scalability](#scalability)
-* [Testing](#testing)
-* [Project Structure](#project-structure)
-* [Setup & Deployment](#setup--deployment)
-* [Future Enhancements](#future-enhancements)
-* [Author](#author)
+1. [Overview](#1-overview)
+2. [Problem Statement](#2-problem-statement)
+3. [Architecture](#3-architecture)
+4. [Tech Stack](#4-tech-stack)
+5. [Core Workflows](#5-core-workflows)
+6. [Infrastructure as Code](#6-infrastructure-as-code)
+7. [Containerization and Deployment](#7-containerization-and-deployment)
+8. [Security](#8-security)
+9. [Scalability and Limitations](#9-scalability-and-limitations)
+10. [Testing](#10-testing)
+11. [Project Structure](#11-project-structure)
+12. [Setup and Deployment](#12-setup-and-deployment)
+13. [Future Enhancements](#13-future-enhancements)
+14. [Author](#14-author)
 
----
+## 1. Overview
 
-## Overview
+CloudExpense is a cloud-integrated expense tracker built with a Next.js frontend and a Node.js/Express backend. Users can create an account, upload a receipt image, review OCR-extracted details, save expenses, and view expense summaries and charts.
 
-The **AI-Powered Expense Tracker with OCR** is a production-ready cloud-native web application built on Amazon Web Services (AWS).
+Implemented application capabilities include:
 
-Users can:
+- Cognito-based signup, email confirmation, login, and password-reset flows
+- Private S3 receipt storage using time-limited presigned URLs
+- Receipt text extraction using **Tesseract.js** (not AWS Textract)
+- Expense persistence and per-user retrieval through DynamoDB
+- Expense dashboard with charts, summaries, and expense history
+- CSV export endpoint for expense records
+- Optional CloudWatch metrics and SES email integration
+- An SNS monthly-summary trigger endpoint that can be invoked manually
 
-* Authenticate securely
-* Upload receipt images
-* Automatically extract financial data using AWS Textract
-* Visualize expenses through an interactive dashboard
-* Receive automated monthly summaries via email
+## 2. Problem Statement
 
-The project demonstrates real-world implementation of:
+Manual expense tracking requires users to enter receipt information repeatedly. This can be time-consuming and may introduce data-entry errors.
 
-* Infrastructure as Code (IaC)
-* Serverless storage
-* Managed identity
-* AI-as-a-Service
-* Container orchestration
-* Cloud-native architecture
+CloudExpense reduces repetitive entry by extracting text from receipt images and parsing likely merchant, amount, date, and category values. Users can review the extracted values before saving them. OCR and parsing are heuristic and may require correction, especially for blurry, rotated, or unusual receipts.
 
----
+## 3. Architecture
 
-## Problem Statement
+### 3.1 Component view
 
-Manual expense tracking requires repetitive data entry and often leads to errors.
+The application uses the following high-level components:
 
-This project automates receipt digitization using **AWS Textract AnalyzeExpense API**, reducing manual effort while maintaining scalability and security.
+- **Client:** Next.js frontend
+- **Application API:** Node.js and Express
+- **Authentication:** Amazon Cognito User Pool
+- **Receipt object storage:** Amazon S3
+- **Expense database:** Amazon DynamoDB
+- **OCR engine:** Tesseract.js running in the backend
+- **Optional monitoring:** Amazon CloudWatch custom metrics
+- **Optional email:** Amazon SES
+- **Summary notifications:** Amazon SNS
 
----
+![CloudExpense component architecture](docs/architecture/component-architecture.jpg)
 
-## Architecture
+### 3.2 Receipt data flow
 
-The system is designed using a layered cloud-native architecture.
+1. A signed-in user selects a receipt image.
+2. The backend creates a short-lived presigned S3 upload URL.
+3. The browser uploads the image directly to the private S3 bucket.
+4. The backend retrieves the uploaded object and runs Tesseract.js OCR.
+5. The parser estimates receipt fields from the extracted text.
+6. The frontend displays the result for review.
+7. The user saves the confirmed expense to DynamoDB.
+8. The dashboard requests the user's saved expenses and renders summaries/charts.
 
-### 1️⃣ Cloud Architecture (Component View)
+![Receipt data-flow sequence](docs/architecture/dataflow-sequence.png)
 
-* Client (Next.js frontend)
-* EC2 (Dockerized backend & frontend)
-* Cognito (Authentication)
-* S3 (Receipt Storage)
-* Textract (OCR)
-* DynamoDB (Database)
-* SNS (Notifications)
-* VPC + Security Groups (Networking)
+### 3.3 Infrastructure view
 
-![Cloud Architecture Diagram](docs/architecture/component-architecture.jpg)
+The repository includes a legacy CloudFormation template, now labelled `backend/infrastructure-template-DRAFT-DO-NOT-DEPLOY.yaml`. It contains outdated resource references, broad permissions, and deployment assumptions that need correction. It is **not a verified one-click deployment template** and should not be deployed as-is.
 
----
+![Infrastructure architecture](docs/infrastructure/infrastructure-architecture.png)
 
-### 2️⃣ Data Flow Pipeline (Sequence View)
+## 4. Tech Stack
 
-Workflows include:
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | Next.js, React, TypeScript | Web UI and routes |
+| Styling | Tailwind CSS | Responsive styling |
+| Charts | Recharts | Expense visualizations |
+| Backend | Node.js, Express | REST API |
+| Authentication | Amazon Cognito | Signup, confirmation, login, password reset |
+| Object storage | Amazon S3 | Receipt image storage |
+| Database | Amazon DynamoDB | Expense records |
+| OCR | Tesseract.js | Text extraction from receipt images |
+| Notifications | Amazon SNS (optional) | Monthly summary publishing |
+| Email | Amazon SES (optional) | Email notifications |
+| Monitoring | Amazon CloudWatch (optional) | Custom count metrics |
+| Containers | Docker, Docker Compose | Backend container workflow |
 
-* Authentication
-* Receipt Upload + OCR Processing
-* Expense Management
-* Monthly Summary Notifications
+## 5. Core Workflows
 
-![Data Flow Diagram](docs/architecture/dataflow-sequence.png)
+### 5.1 Authentication
 
----
+The frontend calls backend endpoints for signup, email confirmation, login, and password reset. Cognito manages the user pool and authentication. The frontend stores the returned tokens in browser local storage and sends the access token in the `Authorization: Bearer` header for protected API calls.
 
-### 3️⃣ Infrastructure Deployment (IaC View)
+![Login page](docs/ui/login.png)
+![Signup page](docs/ui/signup.png)
+![Cognito console](docs/aws-console/cognito.png)
 
-All AWS resources are provisioned through:
+### 5.2 Receipt upload and OCR
 
-```
-infrastructure.yaml
-```
+The API creates a presigned S3 upload URL that expires after five minutes. The receipt remains in a private bucket; the application generates temporary download URLs when a receipt needs to be viewed. Tesseract.js extracts text, and the application parser estimates the merchant, total, date, and category.
 
-![Infrastructure Diagram](docs/infrastructure/infrastructure-architecture.png)
+**Important:** OCR is not guaranteed to be correct. Users should review the extracted values before saving.
 
----
+![Receipt upload screen](docs/ui/upload.png)
+![OCR preview](docs/ui/ocr-preview.png)
 
-## Tech Stack
+### 5.3 Expense dashboard
 
-### Frontend
+The backend retrieves expense records using the authenticated user's identifier. The dashboard presents expense history, summary cards, category distribution, and monthly trends.
 
-* Next.js 16
-* TypeScript
-* Tailwind CSS
+![Expense dashboard](docs/ui/dashboard.png)
 
-### Backend
+### 5.4 Expense export
 
-* Node.js v22
-* Express.js
+The backend exposes `GET /expenses/export.csv` to export the authenticated user's expense records in CSV format.
 
-### Containerization
+### 5.5 Monthly summary notification
 
-* Docker
-* Docker Compose
+`POST /trigger-summary` runs the summary handler and publishes eligible previous-month summaries to the configured SNS topic. This endpoint is a manual trigger in the current application. A scheduled monthly run is **not verified/configured by the application source**, so the report must not claim that automatic scheduled emails are active.
 
-### AWS Services
+SES-related email behavior is optional and requires a verified sender identity and appropriate AWS permissions.
 
-* EC2 (t3.micro)
-* Cognito
-* S3 (Presigned URLs)
-* Textract (AnalyzeExpense API)
-* DynamoDB (Pay-per-request)
-* SNS
-* CloudFormation
-* VPC & Security Groups
+## 6. Infrastructure as Code
 
----
+A legacy CloudFormation template is retained for reference at:
 
-## Core Workflows
-
-### Authentication Flow
-
-* User signup with email verification (OTP)
-* Secure Remote Password (SRP)
-* JWT token issued upon login
-* JWT used for protected API calls
-
-![Login Page](docs/ui/login.png)
-![Signup Page](docs/ui/signup.png)
-![Cognito Console](docs/aws-console/cognito.png)
-
----
-
-### Receipt Upload & OCR Pipeline
-
-1. User selects receipt
-2. Backend generates presigned S3 URL
-3. Frontend uploads directly to S3
-4. Backend calls Textract AnalyzeExpense
-5. Extracted fields returned:
-
-   * Merchant Name
-   * Total Amount
-   * Date
-6. User confirms data
-7. Expense saved to DynamoDB
-
-![Receipt Upload](docs/ui/upload.png)
-![OCR Preview](docs/ui/ocr-preview.png)
-
----
-
-### Expense Dashboard
-
-* JWT-authenticated requests
-* Partitioned DynamoDB queries using `userId`
-* Displays:
-
-  * Category pie chart
-  * Monthly trend line chart
-  * Expense table
-  * Summary statistics
-
-![Dashboard](docs/ui/dashboard.png)
-
----
-
-### Monthly Email Notifications
-
-* Scheduled aggregation of expenses
-* Formatted HTML summary
-* Published to SNS topic
-* Delivered via email
-
-![S3 Bucket](docs/aws-console/s3-bucket.png)
-![CloudFormation Console](docs/aws-console/cloudformation.png)
-
----
-
-## Infrastructure as Code
-
-All AWS resources are defined in a single declarative file:
-
-```
-infrastructure.yaml
+```text
+backend/infrastructure-template-DRAFT-DO-NOT-DEPLOY.yaml
 ```
 
-Resources created:
+It attempts to describe networking, EC2, IAM, Cognito, S3, DynamoDB, and SNS resources. However, it includes a fixed EC2 key-pair name, a hard-coded repository clone target, broad managed IAM policies, and port/configuration assumptions that do not match the current app consistently.
 
-* VPC
-* Public Subnet
-* Internet Gateway
-* Route Tables
-* Security Groups
-* EC2 Instance
-* IAM Role & Instance Profile
-* Cognito User Pool & Client
-* S3 Bucket
-* DynamoDB Table
-* SNS Topic
+For safety, this template is documented as a draft rather than a verified IaC deployment. Before using it, update the repository URL, parameters, region-specific AMI, ports, IAM permissions, and startup configuration; then validate it with CloudFormation template validation and a controlled test stack.
 
-### Benefits
+## 7. Containerization and Deployment
 
-* Reproducible deployments
-* Version-controlled infrastructure
-* Automated rollback
-* No manual console configuration
+The backend has a Dockerfile and a backend-only Docker Compose configuration. The frontend is a separate Next.js application and is not included as a service in the current Compose file.
 
----
-
-## Containerization & Deployment
-
-Two containers:
-
-| Service  | Port |
-| -------- | ---- |
-| Backend  | 5000 |
+| Component | Local development port |
+|---|---:|
 | Frontend | 3000 |
+| Backend API | 3001 |
 
-Managed via `docker-compose`.
+Docker availability and successful container deployment should be demonstrated with a local build/run test before claiming containerized deployment as verified.
 
-Benefits:
+## 8. Security
 
-* Environment consistency
-* Dependency isolation
-* Simplified deployment
-* Production-ready setup
+Current security-related design elements:
 
----
+- Cognito-managed account authentication
+- Bearer-token checks on protected API routes
+- Private S3 receipt storage with presigned URLs
+- Per-user expense retrieval using the Cognito subject identifier
+- AWS credentials supplied through environment variables rather than committed secrets
 
-## Security
+Security limitations to address before any public deployment:
 
-### Authentication
+- Review CORS settings; wildcard origins should not be used casually in a public deployment.
+- Remove any default/fallback JWT secret and require a strong configured secret if JWT signing remains part of the application.
+- Use a least-privilege IAM policy. Avoid `s3:*`, `dynamodb:*`, `iam:*`, public-read bucket policies, and broad service-managed policies.
+- Keep `.env` and credentials out of version control; rotate any credentials that may have been exposed.
+- Restrict SSH access and expose only required application ports.
+- Verify HTTPS configuration before describing the deployment as HTTPS-enforced.
+- Keep the receipt bucket private; do not apply public-read policies to receipt objects.
 
-* JWT-based stateless authentication
-* SRP protocol
-* Email verification
-* Token expiration
+## 9. Scalability and Limitations
 
-### Data Protection
+### Current limitations
 
-* Private S3 bucket
-* 15-minute presigned URL expiration
-* DynamoDB encryption at rest
-* HTTPS enforced
+- Single backend process; no verified high-availability configuration
+- OCR and field parsing are heuristic and can misread receipts
+- The monthly summary handler uses a DynamoDB Scan, which is inefficient as the dataset grows
+- Scheduled monthly execution is not configured/verified in the current application source
+- The CloudFormation template is a draft and not safe for one-click deployment
+- Automated test coverage is not established by the current package scripts
 
-### Network Isolation
+### Future enhancements
 
-* Custom VPC
-* Restricted security groups
-* Least-privilege IAM roles
+- Add automated unit/integration tests for authentication, OCR parsing, user isolation, and expense persistence
+- Replace full-table scans with indexed/query-based aggregation when needed
+- Configure a verified scheduled trigger for monthly summaries
+- Improve receipt validation and user correction flow
+- Complete and validate a least-privilege CloudFormation template
+- Add HTTPS and a restricted CORS allowlist for public deployment
 
----
+## 10. Testing
 
-## Scalability
+The backend package currently does not define a real automated test suite. The following manual test checklist can be used for a demonstration; mark each item as passed only after running it and recording evidence.
 
-### Current Limitation
+| Test | Expected result | Status |
+|---|---|---|
+| Signup and email confirmation | Cognito creates and confirms the user | Not verified in this document |
+| Login | Valid credentials return tokens | Not verified in this document |
+| Protected endpoint without token | Request is rejected | Not verified in this document |
+| Receipt upload | Image is stored in private S3 | Not verified in this document |
+| OCR preview | Text is extracted and fields are shown for review | Not verified in this document |
+| Save expense | Expense is stored in DynamoDB | Not verified in this document |
+| User isolation | One user cannot retrieve another user's expenses | Not verified in this document |
+| CSV export | Current user's expenses download as CSV | Not verified in this document |
+| Monthly summary trigger | Summary is published to SNS when configured | Not verified in this document |
 
-* Single EC2 instance (Single Point of Failure)
+## 11. Project Structure
 
-### Future Improvements
-
-* Application Load Balancer
-* Auto Scaling Group
-* CloudFront CDN
-* ElastiCache (Redis)
-* Lambda-based backend
-* DynamoDB GSIs
-
----
-
-## Testing
-
-### Functional Testing
-
-* Signup & OTP verification
-* JWT validation
-* OCR extraction accuracy
-* Expense persistence
-
-### Security Testing
-
-* Unauthorized API rejection
-* Expired token handling
-* Cross-user isolation
-* Presigned URL expiration validation
-
----
-
-## Project Structure
-
+```text
+CloudExpense-main/
+â”œâ”€â”€ backend/
+â”‚   â”œâ”€â”€ src/
+â”‚   â”‚   â”œâ”€â”€ handlers/
+â”‚   â”‚   â”œâ”€â”€ middleware/
+â”‚   â”‚   â”œâ”€â”€ models/
+â”‚   â”‚   â””â”€â”€ utils/
+â”‚   â”œâ”€â”€ server.js
+â”‚   â”œâ”€â”€ Dockerfile
+â”‚   â”œâ”€â”€ docker-compose.yml
+â”‚   â”œâ”€â”€ .env.example
+â”‚   â””â”€â”€ infrastructure-template-DRAFT-DO-NOT-DEPLOY.yaml
+â”œâ”€â”€ frontend/
+â”‚   â””â”€â”€ src/
+â”œâ”€â”€ docs/
+â”‚   â”œâ”€â”€ architecture/
+â”‚   â”œâ”€â”€ aws-console/
+â”‚   â”œâ”€â”€ infrastructure/
+â”‚   â””â”€â”€ ui/
+â”œâ”€â”€ CLOUD_EXPENSE_CHANGES.md
+â””â”€â”€ README.md
 ```
-.
-├── backend/
-├── frontend/
-├── infrastructure.yaml
-├── docker-compose.yml
-└── README.md
+
+## 12. Setup and Deployment
+
+### Prerequisites
+
+- Node.js 20 or later
+- npm
+- AWS account with Cognito, S3, and DynamoDB resources configured
+- AWS credentials available to the backend process
+- Docker only if using the backend container
+
+### 12.1 Configure the backend
+
+1. Open a terminal in `backend/`.
+2. Copy `.env.example` to `.env`.
+3. Fill in the actual resource values for your AWS account and region.
+4. Never commit `.env` or real credentials.
+
+```powershell
+# Windows PowerShell, from the backend folder
+Copy-Item .env.example .env
+npm install
+npm run dev
 ```
 
----
+The API defaults to `http://localhost:3001`. Check the health endpoint:
 
-## Setup & Deployment
+```text
+http://localhost:3001/health
+```
 
-### 1. Clone Repository
+Expected response:
+
+```json
+{"status":"ok"}
+```
+
+### 12.2 Configure and run the frontend
+
+In a second terminal:
+
+```powershell
+cd frontend
+npm install
+```
+
+Set `NEXT_PUBLIC_API_BASE_URL=http://localhost:3001` in `frontend/.env.local` if needed, then run:
+
+```powershell
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+### 12.3 Docker backend
+
+From the `backend/` directory, configure the required environment variables and then run:
 
 ```bash
-git clone <repository-url>
-cd expense-tracker
+docker compose up --build
 ```
 
-### 2. Deploy Infrastructure
+Use `docker compose down` to stop the container. The current Compose file runs the backend only; start the frontend separately.
 
-```bash
-aws cloudformation deploy \
-  --template-file infrastructure.yaml \
-  --stack-name expense-tracker-stack
-```
+### AWS cost and deployment warning
 
-### 3. Run Application
+Do not deploy the draft CloudFormation template without correcting and validating it first. AWS resources may incur charges even when the application is not being actively used. Check the AWS Free Tier and service-specific pricing before creating resources.
 
-```bash
-docker-compose up --build
-```
+## 13. Future Enhancements
 
----
+- Scheduled monthly summaries
+- Improved OCR field extraction and validation
+- More detailed budgets and spending insights
+- Better automated test coverage
+- Reviewed Infrastructure as Code and deployment automation
+- Optional export formats beyond CSV
 
-## Future Enhancements
+## 14. Author
 
-* Multi-currency support
-* Budget alerts
-* Expense sharing between users
-* Analytics export (CSV/PDF)
-* Serverless backend migration
+**Project:** CloudExpense
+**Submitted by:** Add the project team members' names and IDs here.
+**Course:** Add course/subject and mentor details here.
